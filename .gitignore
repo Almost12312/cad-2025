@@ -1,2 +1,24 @@
 .DS_Store
 *.pdf
+
+# IDE
+.idea/
+.vscode/
+
+# Claude
+.claude/
+
+# Gradle
+.gradle/
+build/
+gradlew
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Java
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
