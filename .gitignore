@@ -22,3 +22,10 @@ gradle/wrapper/gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
+
+# H2 Database files
+*.mv.db
+*.trace.db
+
+# Tomcat
+**/data/
