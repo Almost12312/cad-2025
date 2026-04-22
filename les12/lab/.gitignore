@@ -1,0 +1,20 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Wrapper binaries
+gradle/wrapper/gradle-wrapper.jar
+gradlew
+gradlew.bat
