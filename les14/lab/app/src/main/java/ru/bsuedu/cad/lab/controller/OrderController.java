@@ -1,0 +1,120 @@
+package ru.bsuedu.cad.lab.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import ru.bsuedu.cad.lab.entity.Order;
+import ru.bsuedu.cad.lab.repository.CustomerRepository;
+import ru.bsuedu.cad.lab.repository.ProductRepository;
+import ru.bsuedu.cad.lab.service.OrderService;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Controller
+@RequestMapping("/orders")
+public class OrderController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderController.class);
+
+    private final OrderService orderService;
+    private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
+
+    public OrderController(OrderService orderService,
+                           CustomerRepository customerRepository,
+                           ProductRepository productRepository) {
+        this.orderService = orderService;
+        this.customerRepository = customerRepository;
+        this.productRepository = productRepository;
+    }
+
+    @GetMapping
+    public String listOrders(Model model, Authentication authentication) {
+        model.addAttribute("orders", orderService.getAllOrders());
+        model.addAttribute("username", authentication.getName());
+        model.addAttribute("isManager",
+                authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_MANAGER")));
+        return "order-list";
+    }
+
+    @GetMapping("/new")
+    public String showCreateForm(Model model) {
+        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("products", productRepository.findAll());
+        return "order-create";
+    }
+
+    @PostMapping
+    public String createOrder(@RequestParam Long customerId,
+                              @RequestParam(name = "productId") List<Long> productIds,
+                              @RequestParam(name = "quantity") List<Integer> quantities) {
+        List<Long> filteredProductIds = new ArrayList<>();
+        List<Integer> filteredQuantities = new ArrayList<>();
+        for (int i = 0; i < productIds.size(); i++) {
+            if (productIds.get(i) != null && productIds.get(i) > 0) {
+                filteredProductIds.add(productIds.get(i));
+                filteredQuantities.add(quantities.get(i));
+            }
+        }
+
+        try {
+            orderService.createOrder(customerId, filteredProductIds, filteredQuantities);
+            LOGGER.info("Заказ успешно создан через веб-форму");
+        } catch (Exception e) {
+            LOGGER.error("Ошибка создания заказа", e);
+        }
+        return "redirect:/orders";
+    }
+
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        Order order = orderService.getOrderById(id);
+        model.addAttribute("order", order);
+        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("products", productRepository.findAll());
+        return "order-edit";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String updateOrder(@PathVariable Long id,
+                              @RequestParam Long customerId,
+                              @RequestParam String status,
+                              @RequestParam String shippingAddress,
+                              @RequestParam(name = "productId") List<Long> productIds,
+                              @RequestParam(name = "quantity") List<Integer> quantities) {
+        List<Long> filteredProductIds = new ArrayList<>();
+        List<Integer> filteredQuantities = new ArrayList<>();
+        for (int i = 0; i < productIds.size(); i++) {
+            if (productIds.get(i) != null && productIds.get(i) > 0) {
+                filteredProductIds.add(productIds.get(i));
+                filteredQuantities.add(quantities.get(i));
+            }
+        }
+
+        try {
+            orderService.updateOrder(id, customerId, status, shippingAddress,
+                    filteredProductIds, filteredQuantities);
+            LOGGER.info("Заказ #{} обновлён через веб-форму", id);
+        } catch (Exception e) {
+            LOGGER.error("Ошибка обновления заказа", e);
+        }
+        return "redirect:/orders";
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteOrder(@PathVariable Long id) {
+        try {
+            orderService.deleteOrder(id);
+            LOGGER.info("Заказ #{} удалён через веб-форму", id);
+        } catch (Exception e) {
+            LOGGER.error("Ошибка удаления заказа", e);
+        }
+        return "redirect:/orders";
+    }
+}
